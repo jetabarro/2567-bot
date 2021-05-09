@@ -1,54 +1,41 @@
+const fs = require('fs');
 const Discord = require("discord.js")
-const Presence = require('./presence')
-const bot = new Discord.Client()
-
 const mySecret = process.env['TOKEN']
+const prefix = process.env['prefix']
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+const bot = new Discord.Client()
+bot.commands = new Discord.Collection()
+
+
+for (const file of commandFiles) {
+	const command = require(`./commands/${file}`);
+	// set a new item in the Collection
+	// with the key as the command name and the value as the exported module
+	bot.commands.set(command.name, command);
+}
 
 bot.on("ready", () => {
   console.log(`Logged in as ${bot.user.tag}!`)
 })
 
-//Initialize presence
-let presenceManager = new Presence(bot);
-
 
 bot.on('message', (message) => {
-  
-    if (message.content.substring(0, 1) == '~') {
-      
-        let messageContent = message.content.substring(1);
-        let command = messageContent.split(' ')[0].toLowerCase();
-        let parameters = messageContent.substring(messageContent.indexOf(' ') + 1);
-        let mentioned = message.mentions.users.first();
-				let user;
-        switch (command) {
 
-              // handle commands
-              case "status":
-                if (message.mentions.users.first())
-									user = mentioned;
-                else
-                  user = message.author
-								presenceManager.getStatus(user, message.channel,message.guild, message.author);
-                break;
+		if (!message.content.startsWith(prefix) || message.author.bot) return;
+		const args = message.content.slice(prefix.length).trim().split(/ +/);
+		const commandName = args.shift().toLowerCase();
 
-							case "live":
-								if (message.mentions.users.first())
-									user = mentioned;
-                else
-									user = message.author
-                presenceManager.getLive(user, message.channel,message.guild, message.author);
-                break;
+		const command = bot.commands.get(commandName) || bot.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 
-              case "whoami":
-                presenceManager.introduction(message.channel,message.author);
-                break;
+		if (!command) return;
+		if (command.args && !args.length)	return message.channel.send(`You didn't provide any arguments, ${message.author}!`);
 
-              case "help":
-                presenceManager.help(message.channel,message.author);
-                break;
-        }
-    }
+		try {
+			bot.commands.get(commandName).execute(message, args);
+		} catch (error) {
+			console.error(error);
+			message.reply('there was an error trying to execute that command!');
+		}
 });
 
 bot.login(mySecret)
