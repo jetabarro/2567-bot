@@ -10,21 +10,16 @@ module.exports = {
 	aliases: ['commands'],
 	execute(message, args) {
 		const data = [];
-		const { commands } = message.client;      
+		const { commands } = message.client;     
+		const embed = new Discord.MessageEmbed()
+			.setThumbnail(message.client.user.displayAvatarURL())
+			.setColor(0xff0000)
+			.setFooter(`Replying to ${message.author.username}#${message.author.discriminator}`)
 
 		if (!args.length) {
-			const embed = new Discord.MessageEmbed()
-			.setTitle('Here\'s a list of all my commands:')
-      // Set the thumbnail
-      .setThumbnail(message.client.user.displayAvatarURL())
-			
-      // Set the color of the embed
-			.setColor(0xff0000)
-			.setDescription(`**${commands.map(command => command.name).join('\n')}**\n\nYou can send \`${prefix}help [command name]\` to get info on a specific command!`)
-      // Set the footer of the embed
-      .setFooter(`Replying to ${message.author.username}#${message.author.discriminator}`)
-      // Send the embed to the same channel as the message
-			
+			embed.setTitle('Here\'s a list of all my commands:')
+			embed.setDescription(`**${commands.map(command => command.name).join('\n')}**\n\nYou can send \`${prefix}help [command name]\` to get info on a specific command!`)
+
 			return message.channel.send(embed)
 		}
 
@@ -34,17 +29,10 @@ module.exports = {
 		if (!command) {
 			return message.reply('that\'s not a valid command!');
 		}
-		const embed = new Discord.MessageEmbed()
-			.setTitle(`Name: ${command.name}`)
-  		// Set the thumbnail
-  		.setThumbnail(message.client.user.displayAvatarURL())
-      // Set the color of the embed
-      .setColor(0xff0000)
-			.addField("Aliases:", `${  command.aliases.join(', ') && command.aliases.length ? command.aliases : 'No aliases'}`)
-			.addField("Description:", `${command.description && command.description.length ? command.description: 'None'}`)
-      // Set the footer of the embed
-      .setFooter(`Replying to ${message.author.username}#${message.author.discriminator}`)
-      // Send the embed to the same channel as the message
+
+			embed.setTitle(`Name: ${command.name}`)
+			embed.addField("Aliases:", `${  command.aliases.join(', ') && command.aliases.length ? command.aliases : 'No aliases'}`)
+			embed.addField("Description:", `${command.description && command.description.length ? command.description: 'None'}`)
 
 		message.channel.send(embed);
 
